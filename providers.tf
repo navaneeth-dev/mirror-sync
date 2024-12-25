@@ -24,6 +24,10 @@ variable "AWS_SECRET_ACCESS_KEY" {
   type = string
 }
 
+variable "RCLONE_CONFIG_PASS" {
+  type = string
+}
+
 provider "aws" {
   region     = "ap-southeast-1"
   access_key = var.AWS_ACCESS_KEY_ID

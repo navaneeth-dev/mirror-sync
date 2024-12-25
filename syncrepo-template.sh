@@ -42,7 +42,7 @@ bwlimit=0
 # rsync://rsync.archlinux.org/ftp_tier1
 # Otherwise chose a tier 1 mirror from this list and use its rsync URL:
 # https://www.archlinux.org/mirrors/
-source_url='rsync://mirror.twds.com.tw/archlinux'
+source_url='rsync://mirror.twds.com.tw/archlinux/'
 
 # An HTTP(S) URL pointing to the 'lastupdate' file on your chosen mirror.
 # If you are a tier 1 mirror use: https://rsync.archlinux.org/lastupdate
@@ -63,7 +63,7 @@ find "${target}" -name '.~tmp~' -exec rm -r {} +
 
 rsync_cmd() {
 	local -a cmd=(rsync -rlptH --safe-links --delete-delay --delay-updates
-		"--timeout=600" "--contimeout=60" --no-motd)
+		"--timeout=600" "--contimeout=60" --no-motd -v --info=progress2)
 
 	if stty &>/dev/null; then
 		cmd+=(-h -v --progress)
