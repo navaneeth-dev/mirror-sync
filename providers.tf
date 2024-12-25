@@ -6,14 +6,14 @@ terraform {
     }
   }
 
-  cloud { 
-    organization = "dev-test-org" 
+  cloud {
+    organization = "dev-test-org"
     hostname     = "app.terraform.io"
 
-    workspaces { 
-      name = "mirror-sync" 
-    } 
-  } 
+    workspaces {
+      name = "mirror-sync"
+    }
+  }
 }
 
 variable "AWS_ACCESS_KEY_ID" {

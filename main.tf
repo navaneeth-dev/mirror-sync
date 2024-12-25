@@ -1,6 +1,6 @@
 resource "aws_instance" "mirror_sync" {
-  ami           = "ami-0f7e0b5dcc8774b11"
-  key_name      = "primary"
+  ami      = "ami-0f7e0b5dcc8774b11"
+  key_name = "primary"
   instance_market_options {
     market_type = "spot"
   }
