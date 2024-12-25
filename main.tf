@@ -31,5 +31,6 @@ runcmd:
 - RCLONE_CONFIG_PASS='${var.RCLONE_CONFIG_PASS}' rclone mount --links --daemon --vfs-cache-mode full --vfs-cache-max-size 24G --transfers 8 idrive:mirror /mnt/idrive
 - git clone https://github.com/navaneeth-dev/mirror-sync /root/mirror-sync
 - chmod +x /root/mirror-sync/syncrepo-template.sh
+- /root/mirror-sync/syncrepo-template.sh > /var/log/arch-sync.log
 EOF
 }
