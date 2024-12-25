@@ -30,6 +30,6 @@ runcmd:
 - sudo -v ; curl https://rclone.org/install.sh | sudo bash -s beta
 - RCLONE_CONFIG_PASS='${var.RCLONE_CONFIG_PASS}' rclone mount --links --daemon --vfs-cache-mode full --vfs-cache-max-size 24G --transfers 8 idrive:mirror /mnt/idrive
 - git clone https://github.com/navaneeth-dev/mirror-sync /root/mirror-sync
-- chmod +x /root/mirror-sync/syncrepo-template
+- chmod +x /root/mirror-sync/syncrepo-template.sh
 EOF
 }
