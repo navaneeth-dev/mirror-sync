@@ -1,27 +1,11 @@
-data "aws_ami" "ubuntu" {
-  most_recent = true
-
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-
-  owners = ["099720109477"] # Canonical
-}
-
 resource "aws_instance" "mirror_sync" {
-  ami           = data.aws_ami.ubuntu.id
+  ami           = "ami-0f7e0b5dcc8774b11"
   key_name      = "primary"
   instance_market_options {
     market_type = "spot"
   }
 
-  instance_type = "c5.large"
+  instance_type = "m6g.large"
 
   tags = {
     Name = "mirror-sync"
@@ -33,6 +17,9 @@ resource "aws_instance" "mirror_sync" {
 
   user_data = <<EOF
 #cloud-config
+package_update: true
+packages:
+  - zsh
 write_files:
 - content: |
     RCLONE_ENCRYPT_V0:
@@ -41,7 +28,7 @@ write_files:
 runcmd:
 - sudo mkdir /mnt/idrive
 - sudo -v ; curl https://rclone.org/install.sh | sudo bash -s beta
-- RCLONE_CONFIG_PASS='${var.RCLONE_CONFIG_PASS}' rclone mount --links --daemon --vfs-cache-mode full --vfs-cache-max-size 24G --transfers 16 idrive:mirror /mnt/idrive
+- RCLONE_CONFIG_PASS='${var.RCLONE_CONFIG_PASS}' rclone mount --links --daemon --vfs-cache-mode full --vfs-cache-max-size 24G --transfers 8 idrive:mirror /mnt/idrive
 - wget "https://raw.githubusercontent.com/navaneeth-dev/mirror-sync/refs/heads/main/syncrepo-template.sh" -O /usr/bin/syncrepo-template
 - chmod +x /usr/bin/syncrepo-template
 EOF
