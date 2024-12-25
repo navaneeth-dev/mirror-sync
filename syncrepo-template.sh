@@ -86,6 +86,7 @@ if ! tty -s && [[ -f "$target/lastupdate" ]] && diff -b <(curl -Ls "$lastupdate_
 	exit 0
 fi
 
+echo "Running arch sync"
 rsync_cmd \
 	--exclude='*.links.tar.gz*' \
 	--exclude='/other' \
