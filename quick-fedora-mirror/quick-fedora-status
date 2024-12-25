@@ -1,0 +1,184 @@
+#!/bin/zsh
+zmodload -F zsh/stat b:zstat
+
+# If a file mattern match doesn't match, just give an empty result.
+set -G
+
+usage () {
+    cat <<END
+Usage: quick-fedora-status [OPTION]
+
+Display information on the status of a running quick-fedora-mirror process.
+
+Options:
+  -c, --config PATH     Specify configuration file instead of searching.
+  -h, --help            This message.
+  -w, --watch           Watch output (requires the "watch" command)
+END
+}
+
+parse_args () {
+    while [[ $# > 0 ]]; do
+        opt=$1
+        case $opt in
+            -c | --config)
+                cfgfile=$2
+                shift
+                if [[ ! -r $cfgfile ]]; then
+                    (>&2 echo Cannot read $cfgfile)
+                    exit 1
+                fi
+                ;;
+            -d) # Debugging
+                verboseopt=$2
+                shift
+                ;;
+            -h | --help)
+                usage
+                exit 1
+                ;;
+            -w | --watch)
+                watch=1
+                ;;
+            *)
+                (>&2 echo "Unrecognized argument.")
+                exit 1
+                ;;
+        esac
+        shift
+    done
+}
+
+read_config () {
+    # Load up the configuration file from any of a number of locations
+    local file
+    for file in \
+        $cfgfile \
+        /etc/quick-fedora-mirror/quick-fedora-mirror.conf \
+        /etc/quick-fedora-mirror.conf \
+        ~/.config/quick-fedora-mirror.conf \
+        $(dirname $0)/quick-fedora-mirror.conf \
+        ./quick-fedora-mirror.conf; \
+    do
+        if [[ -r $file ]]; then
+            source $file
+            cfgfile=$file
+            break
+        fi
+    done
+
+    # Override some settings with previously parsed command-line options
+    [[ -n $verboseopt ]] && VERBOSE=$verboseopt
+
+    # Check that the required parameters were provided
+    if [[ -z $DESTD ]]; then
+        (>&2 echo "You must define DESTD in your configuration file ($cfgfile).")
+    fi
+    if [[ -z $TIMEFILE ]]; then
+        (>&2 echo "You must define TIMEFILE in your configuration file ($cfgfile).")
+    fi
+
+    # Set some other general variables based on the value of provided
+    # configuration settings
+    [[ -z $CHECKIN_SITE ]] && skipcheckin=1
+    [[ -z $MAXCHECKINRETRIES ]] && MAXCHECKINRETRIES=$MAXRETRIES
+}
+
+set_default_vars () {
+    # Set various defaults before the configuration file is loaded.
+    VERBOSE=0
+    TIMEFILE=
+    DESTD=
+}
+
+# Here we could look at the state if the transfer hasn't actually started
+not_ready () {
+    echo "No transfer in progress (may be generating the file list)."
+    exit 0
+}
+
+show_log () {
+    if [[ -f $SESSIONLOG ]]; then
+        echo
+        echo "Log:"
+        tail -5 $SESSIONLOG
+        echo
+    fi
+}
+
+# XXX Try to figure out what rsync is doing
+# XXX Find the PID of the currently running rsync process
+# XXX Run this:
+# timeout 1 strace -s 2047 -p 2799059 --trace read > foo 2>&1 ; grep 'read(4' foo|tail -1|awk -F '\\\\n' '{print $2}'
+# XXX to get a filename, then see how far in the transfer list it is.
+
+trace_rsync () {
+
+    echo
+    echo "rsync running"
+}
+
+parse_args "$@"
+
+set_default_vars
+read_config
+
+if [[ $watch ]]; then
+    exec watch -n1 $0 -c $cfgfile
+fi
+
+
+DIR=$(ls -td /$TMPDIR/quick-mirror.* | head -1)
+
+# XXX Make sure we actually have an active sync
+# XXX Need to actually have a directory, and that it actually has a "relatively new" file in it
+if [[ -z "$DIR" ]]; then
+    echo "quick-fedora-mirror not running."
+    exit 0
+fi
+
+cd $DIR
+
+# XXX Try to find the creation time of the directory or the timestamp of the oldest file, to determine when the transfer started.
+# XXX Or have the mirror program actually output its status somewhere, or touch files at specific points....
+
+SESSIONLOG=sessionlog
+
+FILELIST=master-transferlist.sorted
+RSYNCLOG=$(ls -t rsync-out-*.log|head -1)
+
+if [[ ( ! -f $FILELIST ) || ( ! -f $RSYNCLOG ) ]]; then
+    echo "No transfer in progress."
+    show_log
+    exit 0
+fi
+
+TOTALFILES=$(wc -l master-transferlist.sorted | sed 's/ .*//')
+
+CURRENTLINE=$(tail -1 $RSYNCLOG)
+
+# Handle the case where the log exists but it hasn't started transferring files.
+if [[ $CURRENTLINE[1] != "@" ]]; then
+    echo "Not currently transferring a file."
+    trace_rsync
+    show_log
+    exit 0
+fi
+
+CURRENTFILE=$(echo $CURRENTLINE | awk '{print $4}')
+ENDSIZE=$(echo $CURRENTLINE | awk '{print $3}')
+
+TMPSIZE=$(ls -lt $DESTD/${CURRENTFILE:h}/.${CURRENTFILE:t}.?????? | head -1 | awk '{print $5}')
+TMPPCT=$(( 100. * TMPSIZE / ENDSIZE ))
+
+FILENO=$(grep -n $CURRENTFILE\$ master-transferlist.sorted | sed 's/:.*//')
+LISTPCT=$(( 100. * FILENO / TOTALFILES ))
+
+echo "Transfer in progress:"
+echo "  File $FILENO of $TOTALFILES ($LISTPCT[1,6]%)"
+echo "  $CURRENTFILE"
+if [[ $TMPSIZE -gt 0 ]]; then
+    echo "  $TMPSIZE transferred of $ENDSIZE bytes total ($TMPPCT[1,6]%)"
+else
+    echo "  $ENDSIZE bytes total"
+fi
