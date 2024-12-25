@@ -29,7 +29,7 @@ runcmd:
 - sudo mkdir /mnt/idrive
 - sudo -v ; curl https://rclone.org/install.sh | sudo bash -s beta
 - RCLONE_CONFIG_PASS='${var.RCLONE_CONFIG_PASS}' rclone mount --links --daemon --vfs-cache-mode full --vfs-cache-max-size 24G --transfers 8 idrive:mirror /mnt/idrive
-- wget "https://raw.githubusercontent.com/navaneeth-dev/mirror-sync/refs/heads/main/syncrepo-template.sh" -O /usr/bin/syncrepo-template
-- chmod +x /usr/bin/syncrepo-template
+- git clone https://github.com/navaneeth-dev/mirror-sync /root/mirror-sync
+- chmod +x /root/mirror-sync/syncrepo-template
 EOF
 }
