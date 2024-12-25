@@ -32,5 +32,6 @@ runcmd:
 - git clone https://github.com/navaneeth-dev/mirror-sync /root/mirror-sync
 - chmod +x /root/mirror-sync/syncrepo-template.sh
 - /root/mirror-sync/syncrepo-template.sh > /var/log/arch-sync.log
+- poweroff
 EOF
 }
