@@ -1,21 +1,19 @@
-resource "aws_instance" "mirror_sync" {
-  ami      = "ami-0f7e0b5dcc8774b11"
-  key_name = "primary"
-  instance_market_options {
-    market_type = "spot"
-  }
+resource "random_password" "password" {
+  length           = 16
+  special          = true
+  override_special = "!#$%&*()-_=+[]{}<>:?"
+}
 
-  instance_type = "m6g.large"
+resource "linode_instance" "mirror_sync" {
+  label           = "mirror_sync"
+  image           = "linode/ubuntu22.04"
+  region          = "sg-sin-2"
+  type            = "g6-standard-2"
+  authorized_keys = ["ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICiUB1MgFciQ63LsGGBwHVjCtf1cn50BdxN9jTtfTPGF rize@legion"]
+  root_pass       = random_password.password.result
 
-  tags = {
-    Name = "mirror-sync"
-  }
-
-  root_block_device {
-    volume_size = 32
-  }
-
-  user_data = <<EOF
+  metadata {
+    user_data = base64encode(<<EOF
 #cloud-config
 package_update: true
 packages:
@@ -34,4 +32,10 @@ runcmd:
 - /root/mirror-sync/syncrepo-template.sh > /var/log/arch-sync.log
 - poweroff
 EOF
+    )
+  }
+
+  swap_size  = 256
+  private_ip = true
 }
+
