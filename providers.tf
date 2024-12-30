@@ -1,7 +1,8 @@
 terraform {
   required_providers {
-    linode = {
-      source = "linode/linode"
+    vultr = {
+      source  = "vultr/vultr"
+      version = "2.23.1"
     }
   }
 
@@ -15,14 +16,12 @@ terraform {
   }
 }
 
-variable "RCLONE_CONFIG_PASS" {
+variable "VULTR_API_KEY" {
   type = string
 }
 
-variable "LINODE_TOKEN" {
-  type = string
-}
-
-provider "linode" {
-  token = var.LINODE_TOKEN
+provider "vultr" {
+  api_key     = var.VULTR_API_KEY
+  rate_limit  = 100
+  retry_limit = 3
 }

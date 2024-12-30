@@ -1,7 +1,5 @@
-resource "random_password" "password" {
-  length           = 16
-  special          = true
-  override_special = "!#$%&*()-_=+[]{}<>:?"
+variable "RCLONE_CONFIG_PASS" {
+  type = string
 }
 
 locals {
@@ -22,24 +20,25 @@ runcmd:
 - git clone https://github.com/navaneeth-dev/mirror-sync /root/mirror-sync
 - chmod +x /root/mirror-sync/syncrepo-template.sh
 - /root/mirror-sync/syncrepo-template.sh | tee /var/log/arch-sync.log
-- poweroff
+- rsync -rhLptgoD -S -f 'R .~tmp~' --progress -v rsync://mirror.twds.com.tw/fedora/ /mnt/idrive/fedora --exclude='*aarch64*' --exclude='*i386*' --exclude='*armhfp*'
+- curl "https://api.vultr.com/v2/instances/`cat /var/lib/cloud/data/instance-id`" -X DELETE -H "Authorization: Bearer ${var.VULTR_API_KEY}"
 EOF
   )
 }
 
-resource "linode_instance" "mirror_sync" {
-  label           = "mirror_sync"
-  image           = "linode/ubuntu22.04"
-  region          = "sg-sin-2"
-  type            = "g6-standard-2"
-  authorized_keys = ["ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICiUB1MgFciQ63LsGGBwHVjCtf1cn50BdxN9jTtfTPGF rize@legion"]
-  root_pass       = random_password.password.result
+resource "vultr_instance" "mirror_sync" {
+  label       = "mirror_sync"
+  region      = "sgp"
+  os_id       = 2284
+  plan        = "vc2-2c-4gb"
+  hostname    = "mirror-sync"
+  enable_ipv6 = true
+  ssh_key_ids = ["dc63aac6-5d36-419e-af64-c5ce7fdb3e8e"]
+  user_scheme = "limited"
 
-  metadata {
-    user_data = base64encode(local.user_data)
-  }
+  backups          = "disabled"
+  activation_email = false
 
-  swap_size  = 256
-  private_ip = true
+  user_data = local.user_data
 }
 
