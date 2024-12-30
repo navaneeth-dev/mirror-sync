@@ -19,4 +19,10 @@ variable "RCLONE_CONFIG_PASS" {
   type = string
 }
 
-provider "linode" {}
+variable "LINODE_TOKEN" {
+  type = string
+}
+
+provider "linode" {
+  token = var.LINODE_TOKEN
+}

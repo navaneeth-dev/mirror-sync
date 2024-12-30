@@ -4,16 +4,8 @@ resource "random_password" "password" {
   override_special = "!#$%&*()-_=+[]{}<>:?"
 }
 
-resource "linode_instance" "mirror_sync" {
-  label           = "mirror_sync"
-  image           = "linode/ubuntu22.04"
-  region          = "sg-sin-2"
-  type            = "g6-standard-2"
-  authorized_keys = ["ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICiUB1MgFciQ63LsGGBwHVjCtf1cn50BdxN9jTtfTPGF rize@legion"]
-  root_pass       = random_password.password.result
-
-  metadata {
-    user_data = base64encode(<<EOF
+locals {
+  user_data = sensitive(<<EOF
 #cloud-config
 package_update: true
 packages:
@@ -32,7 +24,19 @@ runcmd:
 - /root/mirror-sync/syncrepo-template.sh > /var/log/arch-sync.log
 - poweroff
 EOF
-    )
+  )
+}
+
+resource "linode_instance" "mirror_sync" {
+  label           = "mirror_sync"
+  image           = "linode/ubuntu22.04"
+  region          = "sg-sin-2"
+  type            = "g6-standard-2"
+  authorized_keys = ["ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICiUB1MgFciQ63LsGGBwHVjCtf1cn50BdxN9jTtfTPGF rize@legion"]
+  root_pass       = random_password.password.result
+
+  metadata {
+    user_data = base64encode(local.user_data)
   }
 
   swap_size  = 256
