@@ -17,6 +17,7 @@ jobs:
       - run: terraform apply -auto-approve
         env:
           TF_VAR_RCLONE_CONFIG_PASS: ${{ secrets.TF_VAR_RCLONE_CONFIG_PASS }}
+          TF_VAR_LINODE_TOKEN: ${{ secrets.TF_VAR_LINODE_TOKEN }}
           TF_VAR_AWS_ACCESS_KEY_ID: ${{ secrets.TF_VAR_AWS_ACCESS_KEY_ID }}
           TF_VAR_AWS_SECRET_ACCESS_KEY: ${{ secrets.TF_VAR_AWS_SECRET_ACCESS_KEY }}
 
