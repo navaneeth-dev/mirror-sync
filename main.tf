@@ -21,7 +21,7 @@ runcmd:
 - chmod +x /root/mirror-sync/syncrepo-template.sh
 - /root/mirror-sync/syncrepo-template.sh | tee /var/log/arch-sync.log
 - "rsync -rhLptgoD -S -f 'R .~tmp~' --progress -v rsync://mirror.twds.com.tw/fedora/ /mnt/idrive/fedora --exclude='*aarch64*' --exclude='*i386*' --exclude='*armhfp*'"
-- 'curl "https://api.vultr.com/v2/instances/`cat /var/lib/cloud/data/instance-id`" -X DELETE -H "Authorization: Bearer ${var.VULTR_API_KEY}"'
+- 'curl "https://api.vultr.com/v2/instances/$(cat /var/lib/cloud/data/instance-id)" -X DELETE -H "Authorization: Bearer ${var.VULTR_API_KEY}"'
 EOF
   )
 }
